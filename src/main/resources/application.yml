@@ -1,0 +1,34 @@
+server:
+  port: 8765
+
+spring:
+  application:
+    name: zuul-gateway
+
+# 方式 1.没有zuul.routes配置, 通过zuul网关 访问feign-consumer服务(这里访问的url带真实微服务的项目名)
+#  localhost:8765/feign-consumer/book/1
+# 方式 2.此处加上zuul.routes路由访问映射规则,访问如下链接,即可通过zuul路由到指定的微服务
+#  localhost:8765/api-a/book/1    localhost:8765/api-b/book/1
+# 方式 3.设置好统一公共前缀
+# localhost:8765/api/api-a/book/1
+zuul:
+  prefix: /api #设置统一公共前缀, 只能用方式3访问,带上前缀
+  ignored-services: "*" #原真实服务名忽略(*表示all,忽略所有真实服务名) 加上此行的配置,必须通过方式2(不能用方式1)路由映射访问
+  routes:   #配置路由映射
+    api-a:  #api-a作为feign-consumer真实微服务的映射名称(注意两个api-a要一样)
+      path: /api-a/**
+      serviceId: feign-consumer
+    api-b:
+      path: /api-b/**
+      serviceId: eureka-provider
+  AccessFilter: #禁用自定义过滤器  disable: true表示禁用过滤器
+    pre:
+      disable: true
+  #  #配置路由映射 可简化为2行:
+  #    feign-consumer: /api-a/**
+  #    eureka-provider: /api-b/**
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka/
